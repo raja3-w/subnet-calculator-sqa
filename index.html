@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalkulator Subnet & VLSM</title>
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --primary: #1a73e8;
+      --primary-hover: #1557b0;
+      --text: #202124;
+      --text-muted: #5f6368;
+      --border: #dadce0;
+      --error-bg: #fce8e6;
+      --error-text: #c5221f;
+      --error-border: #f5c2c7;
+      --success-badge-bg: #e6f4ea;
+      --success-badge-text: #137333;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px 16px;
+    }
+
+    .container {
+      max-width: 840px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: var(--card-bg);
+      border-radius: 12px 12px 0 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      overflow: hidden;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 14px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .tab-btn:hover {
+      color: var(--primary);
+      background-color: #f1f3f4;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background-color: var(--card-bg);
+      font-weight: 600;
+    }
+
+    /* Main Card */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 0 0 12px 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(60, 64, 67, 0.08);
+      margin-bottom: 24px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr auto;
+      gap: 16px;
+      align-items: flex-end;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--text);
+      font-family: var(--font-family);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+    }
+
+    input.input-error {
+      border-color: var(--error-text);
+      background-color: #fff8f8;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #ffffff;
+      height: 42px;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+      box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3);
+    }
+
+    .btn-secondary {
+      background: #f1f3f4;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #e8eaed;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      height: 32px;
+    }
+
+    .btn-danger {
+      background-color: transparent;
+      color: var(--error-text);
+      border: 1px solid transparent;
+    }
+
+    .btn-danger:hover {
+      background-color: var(--error-bg);
+    }
+
+    /* Error Alert */
+    .error-box {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background-color: var(--error-bg);
+      border: 1px solid var(--error-border);
+      border-radius: 8px;
+      color: var(--error-text);
+      font-size: 13px;
+      display: none;
+    }
+
+    /* Results */
+    .result-section {
+      margin-top: 24px;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+
+    .state-empty {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .result-card {
+      background-color: #fcfcfc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .result-card .label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .result-card .value {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background-color: var(--success-badge-bg);
+      color: var(--success-badge-text);
+    }
+
+    /* VLSM Requirements List */
+    .vlsm-req-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .vlsm-req-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .vlsm-req-item {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .vlsm-req-item input {
+      flex: 1;
+    }
+
+    /* VLSM Table */
+    .table-container {
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background-color: #f1f3f4;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    td {
+      font-family: var(--font-mono);
+    }
+
+    td.normal-font {
+      font-family: var(--font-family);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Kalkulator Subnet & VLSM</h1>
+      <p>Alat bantu kalkulasi pengalamatan IPv4 untuk Guru & Siswa TKJ</p>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-btn-subnet" onclick="switchTab('subnet')">Subnet Calculator</button>
+      <button class="tab-btn" id="tab-btn-vlsm" onclick="switchTab('vlsm')">VLSM Allocator</button>
+    </div>
+
+    <!-- TAB 1: SUBNET -->
+    <div id="tab-subnet" class="card">
+      <form id="subnet-form" onsubmit="event.preventDefault(); hitungSubnet();">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="subnet-ip">Alamat IP (IPv4)</label>
+            <input type="text" id="subnet-ip" placeholder="Contoh: 172.16.5.130" autocomplete="off" required>
+          </div>
+          <div class="form-group">
+            <label for="subnet-prefix">Prefix CIDR (/0 s.d. /32)</label>
+            <input type="number" id="subnet-prefix" placeholder="25" min="0" max="32" required>
+          </div>
+          <button type="submit" class="btn btn-primary" id="btn-calc-subnet">Hitung</button>
+        </div>
+        <div id="subnet-error" class="error-box"></div>
+      </form>
+
+      <div class="result-section">
+        <div id="subnet-empty" class="state-empty">
+          Masukkan alamat IP dan prefix di atas, lalu klik <strong>Hitung</strong> untuk melihat hasil kalkulasi.
+        </div>
+        <div id="subnet-success" class="result-grid hidden">
+          <div class="result-card">
+            <div class="label">Subnet Mask</div>
+            <div class="value" id="res-mask">-</div>
+          </div>
+          <div class="result-card">
+            <div class="label">Network Address</div>
+            <div class="value" id="res-network">-</div>
+          </div>
+          <div class="result-card">
+            <div class="label">Broadcast Address</div>
+            <div class="value" id="res-broadcast">-</div>
+          </div>
+          <div class="result-card">
+            <div class="label">Host Pertama</div>
+            <div class="value" id="res-first-host">-</div>
+          </div>
+          <div class="result-card">
+            <div class="label">Host Terakhir</div>
+            <div class="value" id="res-last-host">-</div>
+          </div>
+          <div class="result-card">
+            <div class="label">Jumlah Usable Host</div>
+            <div class="value"><span class="badge" id="res-usable-hosts">0</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: VLSM -->
+    <div id="tab-vlsm" class="card hidden">
+      <form id="vlsm-form" onsubmit="event.preventDefault(); alokasiVlsm();">
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label for="vlsm-network">Blok Network CIDR Induk</label>
+          <input type="text" id="vlsm-network" placeholder="Contoh: 192.168.1.0/24" autocomplete="off" required>
+        </div>
+
+        <div class="vlsm-req-header">
+          <label>Daftar Kebutuhan Host per Subnet</label>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addVlsmRow()">+ Tambah Subnet</button>
+        </div>
+
+        <div id="vlsm-req-container" class="vlsm-req-list">
+          <!-- Default rows -->
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btn-calc-vlsm">Alokasikan VLSM</button>
+        <div id="vlsm-error" class="error-box"></div>
+      </form>
+
+      <div class="result-section">
+        <div id="vlsm-empty" class="state-empty">
+          Masukkan network induk dan kebutuhan host, lalu klik <strong>Alokasikan VLSM</strong>.
+        </div>
+        <div id="vlsm-success" class="table-container hidden">
+          <table>
+            <thead>
+              <tr>
+                <th>Kebutuhan</th>
+                <th>Alokasi CIDR</th>
+                <th>Subnet Mask</th>
+                <th>Network</th>
+                <th>Broadcast</th>
+                <th>Range Usable Host</th>
+                <th>Kapasitas</th>
+              </tr>
+            </thead>
+            <tbody id="vlsm-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      const tabSubnet = document.getElementById('tab-subnet');
+      const tabVlsm = document.getElementById('tab-vlsm');
+      const btnSubnet = document.getElementById('tab-btn-subnet');
+      const btnVlsm = document.getElementById('tab-btn-vlsm');
+
+      if (tab === 'subnet') {
+        tabSubnet.classList.remove('hidden');
+        tabVlsm.classList.add('hidden');
+        btnSubnet.classList.add('active');
+        btnVlsm.classList.remove('active');
+      } else {
+        tabSubnet.classList.add('hidden');
+        tabVlsm.classList.remove('hidden');
+        btnSubnet.classList.remove('active');
+        btnVlsm.classList.add('active');
+      }
+    }
+
+    // Subnet calculation
+    async function hitungSubnet() {
+      const ip = document.getElementById('subnet-ip').value.trim();
+      const prefix = document.getElementById('subnet-prefix').value.trim();
+      const errBox = document.getElementById('subnet-error');
+      const emptyBox = document.getElementById('subnet-empty');
+      const successBox = document.getElementById('subnet-success');
+
+      errBox.style.display = 'none';
+      errBox.textContent = '';
+
+      try {
+        const response = await fetch(`/api/subnet?ip=${encodeURIComponent(ip)}&prefix=${encodeURIComponent(prefix)}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || 'Terjadi kesalahan pada input');
+        }
+
+        document.getElementById('res-mask').textContent = data.mask;
+        document.getElementById('res-network').textContent = data.network;
+        document.getElementById('res-broadcast').textContent = data.broadcast !== null ? data.broadcast : '(None - RFC 3021 / 32)';
+        document.getElementById('res-first-host').textContent = data.first_host;
+        document.getElementById('res-last-host').textContent = data.last_host;
+        document.getElementById('res-usable-hosts').textContent = Number(data.usable_hosts).toLocaleString('id-ID');
+
+        emptyBox.classList.add('hidden');
+        successBox.classList.remove('hidden');
+      } catch (err) {
+        errBox.textContent = err.message;
+        errBox.style.display = 'block';
+        successBox.classList.add('hidden');
+        emptyBox.classList.remove('hidden');
+      }
+    }
+
+    // VLSM Dynamic Rows
+    function addVlsmRow(defaultValue = '') {
+      const container = document.getElementById('vlsm-req-container');
+      const div = document.createElement('div');
+      div.className = 'vlsm-req-item';
+      div.innerHTML = `
+        <input type="number" min="1" placeholder="Jumlah host yang dibutuhkan" value="${defaultValue}" required>
+        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">Hapus</button>
+      `;
+      container.appendChild(div);
+    }
+
+    // Pre-populate VLSM rows
+    [100, 50, 20, 2].forEach(val => addVlsmRow(val));
+
+    async function alokasiVlsm() {
+      const network = document.getElementById('vlsm-network').value.trim();
+      const inputs = document.querySelectorAll('#vlsm-req-container input');
+      const errBox = document.getElementById('vlsm-error');
+      const emptyBox = document.getElementById('vlsm-empty');
+      const successBox = document.getElementById('vlsm-success');
+      const tbody = document.getElementById('vlsm-table-body');
+
+      errBox.style.display = 'none';
+      errBox.textContent = '';
+
+      const kebutuhan = [];
+      inputs.forEach(inp => {
+        const val = parseInt(inp.value, 10);
+        if (!isNaN(val)) kebutuhan.push(val);
+      });
+
+      try {
+        const response = await fetch('/api/vlsm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ network, kebutuhan_host: kebutuhan })
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || 'Terjadi kesalahan alokasi VLSM');
+        }
+
+        tbody.innerHTML = '';
+        data.forEach(item => {
+          const tr = document.createElement('tr');
+          const rangeHost = `${item.first_host} - ${item.last_host}`;
+          tr.innerHTML = `
+            <td class="normal-font">${item.kebutuhan} host</td>
+            <td><strong>${item.network_cidr}</strong></td>
+            <td>${item.mask}</td>
+            <td>${item.network}</td>
+            <td>${item.broadcast !== null ? item.broadcast : '-'}</td>
+            <td>${rangeHost}</td>
+            <td><span class="badge">${item.usable_hosts} host</span></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        emptyBox.classList.add('hidden');
+        successBox.classList.remove('hidden');
+      } catch (err) {
+        errBox.textContent = err.message;
+        errBox.style.display = 'block';
+        successBox.classList.add('hidden');
+        emptyBox.classList.remove('hidden');
+      }
+    }
+  </script>
+</body>
+</html>
+
