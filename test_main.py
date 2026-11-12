@@ -113,3 +113,4 @@ def test_api_subnet_invalid(ip, prefix):
     assert response.status_code == 400
     data = response.json()
     assert "detail" in data
+

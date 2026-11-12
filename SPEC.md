@@ -270,3 +270,4 @@ Tabel ini menjadi acuan mutlak untuk penyusunan pengujian otomatis (`test_main.p
 2. Otentikasi pengguna, manajemen hak akses, atau basis data.
 3. Fitur routing table calculation, supernetting/CIDR aggregation di luar VLSM standar.
 4. Framework frontend berbasis kompilasi kompleks (seperti React/Vue/Angular build step); frontend cukup vanila HTML/CSS/JS agar ringan dan ramah deployment.
+

@@ -56,3 +56,4 @@ Halaman dirancang responsif untuk desktop ($\ge 768\text{px}$) maupun perangkat 
 3. **Error State**:
    - Input field yang bermasalah diberi border merah `#C5221F`.
    - Kotak alert pesan kesalahan muncul tepat di bawah form dengan ikon peringatan dan deskripsi kesalahan dari backend API.
+
