@@ -85,7 +85,9 @@ def read_root():
 
 
 @app.get("/api/subnet")
+@app.get("/subnet")
 def api_subnet(ip: str, prefix: int):
+
     try:
         return hitung_subnet(ip, prefix)
     except ValueError as e:
@@ -173,7 +175,9 @@ class VLSMRequest(BaseModel):
 
 
 @app.post("/api/vlsm")
+@app.post("/vlsm")
 def api_vlsm(req: VLSMRequest):
+
     try:
         return alokasi_vlsm(req.network, req.kebutuhan_host)
     except ValueError as e:
