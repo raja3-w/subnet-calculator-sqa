@@ -45,3 +45,16 @@ Setelah pengujian selesai, hentikan dan hapus container dengan:
 docker rm -f subnet-app
 ```
 
+## Deploy
+
+Aplikasi ini telah di-deploy ke Vercel dan dapat diakses publik pada:
+- **URL Produksi**: [https://subnet-calculator-sqa-bice.vercel.app](https://subnet-calculator-sqa-bice.vercel.app)
+
+### Menjalankan Smoke Test ke URL Produksi
+Untuk memverifikasi kehandalan seluruh endpoint di lingkungan produksi:
+```bash
+uv run python scripts/smoke_test.py https://subnet-calculator-sqa-bice.vercel.app
+```
+*(Atau menggunakan `python3 scripts/smoke_test.py https://subnet-calculator-sqa-bice.vercel.app`)*.
+
+
